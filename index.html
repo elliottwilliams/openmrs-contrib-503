@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <script data-require="angular.js@*" data-semver="1.3.0-beta.5" src="https://code.angularjs.org/1.3.0-beta.5/angular.js"></script>
+    <script data-require="lodash.js@*" data-semver="2.4.1" src="http://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.js"></script>
+
+    <title>Error 503 Service Unavailable</title>
+    
+    <meta http-equiv="refresh" content="15">
+    
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <script type="text/javascript" id="globalnav-script" src="https://id.openmrs.org/globalnav/js/app-optimized.js"></script>
+
+    <style>
+      body {
+        font-family: 'Open Sans', sans-serif;
+        margin: 0;
+      }
+      h1, h2, h3 {
+        font-weight: bold;
+      }
+      .container {
+        margin: 1em;
+      }
+    </style>
+  </head>
+
+  <body ng-app="status">
+  
+  <section class="container">
+    <h1>503 Service Unavailable</h1>
+    <p>Our apologies for the temporary inconvenience.</p>
+  </section>
+    
+  <section class="ng-cloak container" ng-controller="StatusController" ng-show="loaded">
+  
+    <h2>Infrastructure Status</h2>
+    
+    <p ng-if="!showIncidents">
+      No known service disruptions.
+    </p>
+    
+    <p ng-if="showIncidents">
+      There are known infrastructure interruptions on the following services:
+    </p>
+    
+    <ul ng-if="showIncidents" ng-repeat="i in incidents">
+      
+      <li>{{i.name}}</li>
+      
+    </ul>
+      
+    
+    <p>
+      See more information on
+      <a href="http://status.openmrs.org">status.openmrs.org</a>.
+    </p>
+    
+  </section>
+  
+  <script type="text/javascript">
+  angular.module('status', [])
+  
+  .controller('StatusController', function($http, $scope) {
+  
+  $http.get('https://status.io/1.0/status/534decd528328a247100004b')
+  .error(function() {
+    $scope.error = true;
+  })
+  .success(function(data) {
+    
+    $scope.data = data;
+    
+    var statuses = data.result.status;
+    
+    var incidents = $scope.incidents = _.filter(statuses, function(s) {
+      
+      return _.filter(s.containers, function(c) {
+        return c.status_code !== 100 
+      }).length;
+      
+    });
+    
+    $scope.showIncidents = incidents.length > 0;
+    
+  })
+  .finally(function() {
+    $scope.loaded = true;
+  });
+  
+  });    
+  </script>
+  
+  </body>
+
+
+</html>
